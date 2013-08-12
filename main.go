@@ -20,7 +20,7 @@ func init() {
 }
 
 func Bumper() {
-	ticker := time.NewTicker(time.Duration(*bumpEvery) * time.Second)
+	ticker := time.NewTicker(time.Duration(*bumpEvery))
 	var mstats runtime.MemStats
 	for {
 		runtime.ReadMemStats(&mstats)
