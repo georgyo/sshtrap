@@ -11,7 +11,7 @@ ssh-keygen -t ecdsa -b 521 -f ./id_ecdsa # Only avilable in newer versions of SS
 sshtrap -alsologtostderr -port 2022
 ```
 
-Or to use your actual host keys
+Or to use your actual host keys. This requires the trap to run as root, so you most likely don't want to do this.
 
 ```
 sudo sshtrap -alsologtostderr -port 2022 -rsa_key /etc/ssh/ssh_host_rsa_key -dsa_key /etc/ssh/ssh_host_dsa_key -ecdsa_key /etc/ssh/ssh_host_ecdsa_key
