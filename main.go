@@ -136,11 +136,11 @@ func main() {
 	config := &ssh.ServerConfig{
 		NoClientAuth: false,
 		PasswordCallback: func(conn *ssh.ServerConn, user, pass string) bool {
-			glog.Warningf("Password auth - User=%q Addr=%v ClientVersion=%q", user, conn.RemoteAddr(), conn.ClientVersion)
+			glog.Warningf("Password auth - User=%q Password=%q Addr=%v ClientVersion=%q", user, pass, conn.RemoteAddr(), conn.ClientVersion)
 			return true
 		},
 		PublicKeyCallback: func(conn *ssh.ServerConn, user, algo string, pubkey []byte) bool {
-			glog.Warningf("Pubkey auth - User=%q Addr=%v ClientVersion=%q", user, conn.RemoteAddr(), conn.ClientVersion)
+			glog.Warningf("Pubkey auth - User=%q Keyalgo=%q Addr=%v ClientVersion=%q", user, algo, conn.RemoteAddr(), conn.ClientVersion)
 			return true
 		},
 		KeyboardInteractiveCallback: func(conn *ssh.ServerConn, user string, client ssh.ClientKeyboardInteractive) bool {
