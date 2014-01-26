@@ -28,6 +28,8 @@ import (
 )
 
 var rsaPrivKeyFile = flag.String("rsa_key", "id_rsa", "The private rsa key for the ssh-server")
+var dsaPrivKeyFile = flag.String("dsa_key", "id_dsa", "The private dsa key for the ssh-server")
+var ecdsaPrivKeyFile = flag.String("ecdsa_key", "id_ecdsa", "The private ecdsa key for the ssh-server")
 var bumpEvery = flag.Int("bump_every", 3600, "How offten to print general process stats, in seconds")
 var port = flag.Int("port", 2022, "The port to listen on")
 
@@ -35,7 +37,7 @@ func init() {
 }
 
 func Bumper() {
-	ticker := time.NewTicker(time.Duration(*bumpEvery))
+	ticker := time.NewTicker(time.Duration(*bumpEvery) * time.Second)
 	var mstats runtime.MemStats
 	for {
 		runtime.ReadMemStats(&mstats)
@@ -147,12 +149,20 @@ func main() {
 		},
 	}
 
-	pemBytes, err := ioutil.ReadFile(*rsaPrivKeyFile)
-	if err != nil {
-		glog.Fatal("Failed to load private key: ", err)
-	}
-	if err = config.SetRSAPrivateKey(pemBytes); err != nil {
-		glog.Fatal("Failed to parse private key: ", err)
+	var keyFiles []*string
+	keyFiles = append(keyFiles, rsaPrivKeyFile, dsaPrivKeyFile, ecdsaPrivKeyFile)
+	for _, keyFile := range keyFiles {
+		pemBytes, err := ioutil.ReadFile(*keyFile)
+		if err != nil {
+			glog.Warning("Failed to load private key: ", err)
+			continue
+		}
+		if signer, err := ssh.ParsePrivateKey(pemBytes); err != nil {
+			glog.Fatal("Failed to parse private key: ", err)
+		} else {
+			glog.Info("Added private key ", keyFile)
+			config.AddHostKey(signer)
+		}
 	}
 
 	// Once a ServerConfig has been configured, connections can be
