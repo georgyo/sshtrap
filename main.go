@@ -75,7 +75,7 @@ func ServeSSHConnection(sConn *ssh.ServerConn) {
 			cCloseChan := make(chan struct{})
 			defer close(cCloseChan)
 
-			glog.Infof("%v: Created Channel Payload=%q", sConn.RemoteAddr(), channel.ExtraData())
+			glog.Infof("%v: Created Channel - Payload=%q", sConn.RemoteAddr(), channel.ExtraData())
 			term := terminal.NewTerminal(channel, "> ")
 			serverTerm := ServerTerminal{
 				Term:    term,
@@ -108,15 +108,15 @@ func main() {
 	config := &ssh.ServerConfig{
 		NoClientAuth: false,
 		PasswordCallback: func(conn *ssh.ServerConn, user, pass string) bool {
-			glog.Warningf("Password auth - User=%q Password=%q Addr=%v ClientVersion=%q", user, pass, conn.RemoteAddr(), conn.ClientVersion)
+			glog.Warningf("%v: Password auth - User=%q Password=%q ClientVersion=%q", conn.RemoteAddr(), user, pass, conn.ClientVersion)
 			return true
 		},
 		PublicKeyCallback: func(conn *ssh.ServerConn, user, algo string, pubkey []byte) bool {
-			glog.Warningf("Pubkey auth - User=%q Keyalgo=%q Addr=%v ClientVersion=%q", user, algo, conn.RemoteAddr(), conn.ClientVersion)
+			glog.Warningf("%v: Pubkey auth - User=%q Keyalgo=%q ClientVersion=%q", conn.RemoteAddr(), user, algo, conn.ClientVersion)
 			return true
 		},
 		KeyboardInteractiveCallback: func(conn *ssh.ServerConn, user string, client ssh.ClientKeyboardInteractive) bool {
-			glog.Warningf("Interactive auth - User=%q Addr=%v ClientVersion=%q", user, conn.RemoteAddr(), conn.ClientVersion)
+			glog.Warningf("%v: Interactive auth - User=%q ClientVersion=%q", conn.RemoteAddr(), user, conn.ClientVersion)
 			return true
 		},
 	}

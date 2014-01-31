@@ -78,7 +78,7 @@ func (ss *ServerTerminal) ReadLine() (line string, err error) {
 
 		var payload []byte
 		payload, _, ok = parseString(req.Payload)
-		glog.Infof("%v: ChannelRequest Request=%q, WantReply=%t, Payload=%q",
+		glog.Infof("%v: ChannelRequest - Request=%q, WantReply=%t, Payload=%q",
 			ss.Conn.RemoteAddr(), req.Request, req.WantReply, payload)
 
 		err = nil // reset the error to nil for the return
