@@ -10,8 +10,6 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"io/ioutil"
-	//"reflect"
-	//"bufio"
 	"runtime"
 	"strconv"
 	"time"
@@ -43,7 +41,7 @@ func Bumper() {
 
 func ServeSSHConnection(sConn *ssh.ServerConn) {
 	defer sConn.Close()
-	defer glog.Infof("Broke Down connection with %v", sConn.RemoteAddr())
+	defer glog.Infof("%-20v: Destroyed Connection", sConn.RemoteAddr())
 
 	sCloseChan := make(chan struct{})
 	defer close(sCloseChan)
@@ -65,58 +63,32 @@ func ServeSSHConnection(sConn *ssh.ServerConn) {
 		// "session" and ServerShell may be used to present a simple
 		// terminal interface.
 		if channelType := channel.ChannelType(); channelType != "session" {
-			glog.Warningf("Rejected Channel from %v because of unknown channel type %q", sConn.RemoteAddr(), channelType)
+			glog.Errorf("Rejected Channel from %v because of unknown channel type %q", sConn.RemoteAddr(), channelType)
 			channel.Reject(ssh.UnknownChannelType, "unknown channel type "+channelType)
 			continue
 		}
 		go func() {
 			channel.Accept()
 			defer channel.Close()
-			defer glog.Infof("Broke down %q channel from %v", channel.ChannelType(), sConn.RemoteAddr())
+			defer glog.Infof("%-20v: Destroyed Channel", sConn.RemoteAddr())
 
 			cCloseChan := make(chan struct{})
 			defer close(cCloseChan)
 
-			glog.Warningf("Creating %q Channel from %v with Payload: %q", channel.ChannelType(), sConn.RemoteAddr(), channel.ExtraData())
+			glog.Infof("%-20v: Created Channel Payload=%q", sConn.RemoteAddr(), channel.ExtraData())
 			term := terminal.NewTerminal(channel, "> ")
-			serverTerm := &ssh.ServerTerminal{
+			serverTerm := ServerTerminal{
 				Term:    term,
 				Channel: channel,
+				Conn:    sConn,
 			}
-			//crw := bufio.NewReadWriter(bufio.NewReader(channel), bufio.NewWriter(channel))
 			for {
-				/*
-					zeroBuf := []byte{}
-					size, err := channel.Read(zeroBuf)
-					if err != nil {
-						switch err.(type) {
-						default:
-							glog.Warningf("Got a read error on a %q channel from %v with error %q: ", channel.ChannelType(), sConn.RemoteAddr(), err)
-							return
-						case ssh.ChannelRequest:
-							cr := err.(ssh.ChannelRequest)
-							glog.Warningf("Got a Channel Request on a %q channel from %v: Request=%q, WantReply=%s, Payload=%q",
-								channel.ChannelType(), sConn.RemoteAddr(), cr.Request, cr.WantReply, cr.Payload)
-						}
-					} else if size > 0 {
-						glog.Warningf("Intial read on %q channel from %v was: %q", channel.ChannelType(), sConn.RemoteAddr(), zeroBuf[:size])
-					}
-				*/
 				line, err := serverTerm.ReadLine()
 				if err != nil {
-					switch err.(type) {
-					default:
-						glog.Warningf("Got a read error on a %q channel from %v with error %q: ", channel.ChannelType(), sConn.RemoteAddr(), err)
-						return
-					case ssh.ChannelRequest:
-						cr := err.(ssh.ChannelRequest)
-						glog.Warningf("Got a Channel Request on a %q channel from %v: Request=%q, WantReply=%s, Payload=%q",
-							channel.ChannelType(), sConn.RemoteAddr(), cr.Request, cr.WantReply, cr.Payload)
-					}
-					glog.Warningf("Got a read error on a %q channel from %v with error %q: ", channel.ChannelType(), sConn.RemoteAddr(), err)
+					glog.Infof("%-20v: ReadError=%q", sConn.RemoteAddr(), err)
 					return
 				}
-				glog.Info(sConn.RemoteAddr(), ": ", line)
+				glog.Infof("%-20v: ReadLine=%q", sConn.RemoteAddr(), line)
 				if line == "quit" {
 					return
 				}
