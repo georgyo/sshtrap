@@ -24,6 +24,7 @@ var port = flag.Int("port", 2022, "The port to listen on")
 func init() {
 }
 
+// Outputs some go stats on a give interval
 func Bumper() {
 	ticker := time.NewTicker(time.Duration(*bumpEvery) * time.Second)
 	var mstats runtime.MemStats
@@ -75,7 +76,7 @@ func ServeSSHConnection(sConn *ssh.ServerConn) {
 			cCloseChan := make(chan struct{})
 			defer close(cCloseChan)
 
-			glog.Infof("%v: Created Channel - Payload=%q", sConn.RemoteAddr(), channel.ExtraData())
+			glog.Infof("%v: Creating Channel - Payload=%q", sConn.RemoteAddr(), channel.ExtraData())
 			term := terminal.NewTerminal(channel, "> ")
 			serverTerm := ServerTerminal{
 				Term:    term,

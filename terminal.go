@@ -6,6 +6,7 @@ package main
 
 import (
 	"code.google.com/p/go.crypto/ssh"
+	"code.google.com/p/go.crypto/ssh/terminal"
 	"encoding/binary"
 	"github.com/golang/glog"
 )
@@ -76,10 +77,10 @@ func (ss *ServerTerminal) ReadLine() (line string, err error) {
 			return
 		}
 
-		var payload []byte
-		payload, _, ok = parseString(req.Payload)
-		glog.Infof("%v: ChannelRequest - Request=%q, WantReply=%t, Payload=%q",
-			ss.Conn.RemoteAddr(), req.Request, req.WantReply, payload)
+		var payload, data []byte
+		payload, data, ok = parseString(req.Payload)
+		glog.Infof("%v: ChannelRequest - Request=%q, WantReply=%t, Payload=%q Data=%q",
+			ss.Conn.RemoteAddr(), req.Request, req.WantReply, payload, data)
 
 		err = nil // reset the error to nil for the return
 
@@ -105,6 +106,10 @@ func (ss *ServerTerminal) ReadLine() (line string, err error) {
 			line = string(s)
 			ss.Channel.AckRequest(ok)
 			return
+		case "subsystem":
+			ok = true
+			ss.Term.(*terminal.Terminal).SetPrompt(string(payload))
+			ss.Term.SetSize(80, 40)
 		}
 		if req.WantReply {
 			ss.Channel.AckRequest(ok)
