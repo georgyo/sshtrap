@@ -41,7 +41,7 @@ func Bumper() {
 
 func ServeSSHConnection(sConn *ssh.ServerConn) {
 	defer sConn.Close()
-	defer glog.Infof("%-20v: Destroyed Connection", sConn.RemoteAddr())
+	defer glog.Infof("%v: Destroyed Connection", sConn.RemoteAddr())
 
 	sCloseChan := make(chan struct{})
 	defer close(sCloseChan)
@@ -54,7 +54,7 @@ func ServeSSHConnection(sConn *ssh.ServerConn) {
 		// to the channels.
 		channel, err := sConn.Accept()
 		if err != nil {
-			glog.Errorf("error from Accept from %v with error %v: ", sConn.RemoteAddr(), err)
+			glog.Errorf("%v: Channel Accept Error %q", sConn.RemoteAddr(), err)
 			break
 		}
 
@@ -63,19 +63,19 @@ func ServeSSHConnection(sConn *ssh.ServerConn) {
 		// "session" and ServerShell may be used to present a simple
 		// terminal interface.
 		if channelType := channel.ChannelType(); channelType != "session" {
-			glog.Errorf("Rejected Channel from %v because of unknown channel type %q", sConn.RemoteAddr(), channelType)
+			glog.Errorf("%v: Unknown Channel Type %q", sConn.RemoteAddr(), channelType)
 			channel.Reject(ssh.UnknownChannelType, "unknown channel type "+channelType)
 			continue
 		}
 		go func() {
 			channel.Accept()
 			defer channel.Close()
-			defer glog.Infof("%-20v: Destroyed Channel", sConn.RemoteAddr())
+			defer glog.Infof("%v: Destroyed Channel", sConn.RemoteAddr())
 
 			cCloseChan := make(chan struct{})
 			defer close(cCloseChan)
 
-			glog.Infof("%-20v: Created Channel Payload=%q", sConn.RemoteAddr(), channel.ExtraData())
+			glog.Infof("%v: Created Channel Payload=%q", sConn.RemoteAddr(), channel.ExtraData())
 			term := terminal.NewTerminal(channel, "> ")
 			serverTerm := ServerTerminal{
 				Term:    term,
@@ -85,10 +85,10 @@ func ServeSSHConnection(sConn *ssh.ServerConn) {
 			for {
 				line, err := serverTerm.ReadLine()
 				if err != nil {
-					glog.Infof("%-20v: ReadError=%q", sConn.RemoteAddr(), err)
+					glog.Infof("%v: ReadError=%q", sConn.RemoteAddr(), err)
 					return
 				}
-				glog.Infof("%-20v: ReadLine=%q", sConn.RemoteAddr(), line)
+				glog.Infof("%v: ReadLine=%q", sConn.RemoteAddr(), line)
 				if line == "quit" {
 					return
 				}
